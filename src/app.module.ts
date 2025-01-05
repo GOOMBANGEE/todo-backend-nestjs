@@ -3,7 +3,6 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
-import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import * as Joi from 'joi';
 import { WinstonModule } from 'nest-winston';
 import * as process from 'node:process';
@@ -13,6 +12,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { envKey } from './common/const/env.const';
+import { GlobalExceptionFilter } from './common/filter/global-exception.filter';
+import { TodoModule } from './todo/todo.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -62,7 +63,6 @@ import { UserModule } from './user/user.module';
         },
       }),
     }),
-    SentryModule.forRoot(),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
@@ -90,14 +90,14 @@ import { UserModule } from './user/user.module';
     CommonModule,
     AuthModule,
     UserModule,
+    TodoModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    // sentry 설정
     {
       provide: APP_FILTER,
-      useClass: SentryGlobalFilter,
+      useClass: GlobalExceptionFilter,
     },
   ],
 })

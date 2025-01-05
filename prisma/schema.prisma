@@ -14,3 +14,12 @@ model User {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Todo {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  isDone      Boolean  @default(false)
+  startDate   DateTime
+  endDate     DateTime
+}
