@@ -93,19 +93,28 @@ export class TodoService {
     const { keyword, option } = searchTodoDto;
     const limit = 20;
 
-    let where: any = {};
-    if (option === 'title') {
-      where = { title: { contains: keyword, mode: 'insensitive' } };
-    } else if (option === 'description') {
-      where = { description: { contains: keyword, mode: 'insensitive' } };
-    } else if (option === '') {
-      where = {
-        OR: [
-          { title: { contains: keyword, mode: 'insensitive' } },
-          { description: { contains: keyword, mode: 'insensitive' } },
-        ],
-      };
+    // 공통 검색 조건
+    const baseCondition: Prisma.TodoWhereInput = {
+      OR: [
+        { title: { contains: keyword, mode: 'insensitive' } },
+        { description: { contains: keyword, mode: 'insensitive' } },
+      ],
+    };
+
+    // isDone 조건
+    let statusCondition: Prisma.TodoWhereInput | undefined;
+    if (option === 'Done') {
+      statusCondition = { isDone: true };
+    } else if (option === 'In progress') {
+      statusCondition = { isDone: false };
+    } else {
+      statusCondition = undefined;
     }
+
+    // 최종 where 조건
+    const where: Prisma.TodoWhereInput = statusCondition
+      ? { ...baseCondition, AND: [statusCondition] }
+      : baseCondition;
 
     const [todoList, total] = await Promise.all([
       this.prisma.todo.findMany({
