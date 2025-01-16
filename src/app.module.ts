@@ -20,7 +20,7 @@ import { UserModule } from './user/user.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV}`,
+      envFilePath: `.env`,
       validationSchema: Joi.object({
         PORT: Joi.number().default(3000).required(),
         DATABASE_URL: Joi.string().required(),
