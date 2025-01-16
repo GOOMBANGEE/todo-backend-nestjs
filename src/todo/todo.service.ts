@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Todo } from '@prisma/client';
+import { Prisma, Todo } from '@prisma/client';
 import { PrismaService } from 'src/common/prisma.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { SearchTodoDto } from './dto/search-todo.dto';
@@ -14,6 +14,7 @@ import { UpdateTodoDto } from './dto/update-todo.dto';
 export class TodoService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // /todo
   async create(createTodoDto: CreateTodoDto): Promise<Todo> {
     const { startDate, endDate } = createTodoDto;
 
@@ -24,10 +25,12 @@ export class TodoService {
     return await this.prisma.todo.create({ data: createTodoDto });
   }
 
-  async findAll(currentPage: number) {
+  // read
+  // /todo?page=1
+  async findAll(page: number) {
     const limit = 20;
     const todoList = await this.prisma.todo.findMany({
-      skip: (currentPage - 1) * limit,
+      skip: (page - 1) * limit,
       take: limit,
     });
     const total = await this.prisma.todo.count();
@@ -36,17 +39,17 @@ export class TodoService {
     return {
       todoList,
       total,
-      currentPage,
+      page,
       totalPage,
     };
   }
 
-  // read pending
-  // /todo/pending
-  async pending(currentPage: number) {
+  // read in-progress
+  // /todo/in-progress?page=1
+  async inProgress(page: number) {
     const limit = 20;
     const todoList = await this.prisma.todo.findMany({
-      skip: (currentPage - 1) * limit,
+      skip: (page - 1) * limit,
       take: limit,
       where: {
         isDone: false,
@@ -58,17 +61,17 @@ export class TodoService {
     return {
       todoList,
       total,
-      currentPage,
+      page,
       totalPage,
     };
   }
 
   // read done
-  // /todo/done
-  async done(currentPage: number) {
+  // /todo/done?page=1
+  async done(page: number) {
     const limit = 20;
     const todoList = await this.prisma.todo.findMany({
-      skip: (currentPage - 1) * limit,
+      skip: (page - 1) * limit,
       take: limit,
       where: {
         isDone: true,
@@ -80,19 +83,14 @@ export class TodoService {
     return {
       todoList,
       total,
-      currentPage,
+      page,
       totalPage,
     };
   }
 
-  async search(searchTodoDto: SearchTodoDto) {
-    const {
-      keyword = '',
-
-      option = '',
-      currentPage = 1,
-    } = searchTodoDto;
-
+  // /todo/search?page=1
+  async search(page: number, searchTodoDto: SearchTodoDto) {
+    const { keyword, option } = searchTodoDto;
     const limit = 20;
 
     let where: any = {};
@@ -111,7 +109,7 @@ export class TodoService {
 
     const [todoList, total] = await Promise.all([
       this.prisma.todo.findMany({
-        skip: (currentPage - 1) * limit,
+        skip: (page - 1) * limit,
         take: limit,
         where,
       }),
@@ -123,11 +121,12 @@ export class TodoService {
     return {
       todoList,
       total,
-      currentPage,
+      page,
       totalPage,
     };
   }
 
+  // /todo/:id
   async update(id: number, updateTodoDto: UpdateTodoDto) {
     const { startDate, endDate } = updateTodoDto;
 
@@ -145,6 +144,7 @@ export class TodoService {
     });
   }
 
+  // /todo/:id
   async remove(id: number) {
     try {
       return await this.prisma.todo.delete({ where: { id: id } });

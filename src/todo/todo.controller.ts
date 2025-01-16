@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Logger } from 'winston';
 import { CreateTodoDto } from './dto/create-todo.dto';
@@ -29,30 +30,33 @@ export class TodoController {
   }
 
   // read
-  // /todo
+  // /todo?page=1
   @Get()
-  async findAll(currentPage: number = 1) {
-    return await this.todoService.findAll(currentPage);
+  async findAll(@Query('page', ParseIntPipe) page: number = 1) {
+    return await this.todoService.findAll(page);
   }
 
-  // read pending
-  // /todo/pending
-  @Get('pending')
-  pending(currentPage: number = 1) {
-    return this.todoService.pending(currentPage);
+  // read in-progress
+  // /todo/in-progress?page=1
+  @Get('in-progress')
+  inProgress(@Query('page', ParseIntPipe) page: number = 1) {
+    return this.todoService.inProgress(page);
   }
 
   // read done
-  // /todo/done
+  // /todo/done?page=1
   @Get('done')
-  done(currentPage: number = 1) {
-    return this.todoService.done(currentPage);
+  done(@Query('page', ParseIntPipe) page: number = 1) {
+    return this.todoService.done(page);
   }
 
-  // /todo/search
+  // /todo/search?page=1
   @Post('search')
-  search(@Body() searchTodoDto: SearchTodoDto) {
-    return this.todoService.search(searchTodoDto);
+  search(
+    @Body() searchTodoDto: SearchTodoDto,
+    @Query('page', ParseIntPipe) page: number = 1,
+  ) {
+    return this.todoService.search(page, searchTodoDto);
   }
 
   // /todo/:id
