@@ -21,9 +21,13 @@ export class AuthService {
     const email = registerDto.email;
     const username = registerDto.username;
     const password = registerDto.password;
+    const passwordConfirm = registerDto.passwordConfirm;
 
+    if (password !== passwordConfirm) {
+      throw new BadRequestException('Passwords do not match');
+    }
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: email },
+      where: { username },
     });
 
     if (existingUser) {
@@ -40,14 +44,14 @@ export class AuthService {
     };
 
     await this.prisma.user.create({
-      data: { email, username, password: hashedPassword },
+      data: { username, password: hashedPassword },
     });
 
     return newUser;
   }
 
-  async validateUser(email: string, password: string) {
-    const user = await this.userService.findOne(email);
+  async validateUser(username: string, password: string) {
+    const user = await this.userService.findOne(username);
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
@@ -57,7 +61,7 @@ export class AuthService {
   }
 
   async login(user) {
-    const payload = { email: user.email };
+    const payload = { username: user.username };
 
     return {
       access_token: this.jwtService.sign(payload, {

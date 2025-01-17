@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { envKey } from 'src/common/const/env.const';
 import { ConfigService } from '@nestjs/config';
 
-// @UseGuards(JwtGuard) => JwtStrategy return payload: {email: string}
+// @UseGuards(JwtGuard) => JwtStrategy return payload: {username: string}
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly configService: ConfigService) {

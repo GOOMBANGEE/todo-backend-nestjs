@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 // {
-//     "email":  "test@test.com",
+//     "username":  "test",
 //     "password": "password"
 // }
 @Injectable()
