@@ -12,6 +12,8 @@ const sentryDsn = 'SENTRY_DSN';
 
 const saltOrRounds = 'SALT_OR_ROUNDS';
 const jwtSecret = 'JWT_SECRET';
+const accessToken = 'JWT_ACCESS_TOKEN';
+const refreshToken = 'JWT_REFRESH_TOKEN';
 
 const mailTransportHost = 'MAIL_TRANSPORT_HOST';
 const mailTransportAuthUser = 'MAIL_TRANSPORT_AUTH_USER';
@@ -34,6 +36,8 @@ export const envKey = {
 
   saltOrRounds,
   jwtSecret,
+  accessToken,
+  refreshToken,
 
   mailTransportHost,
   mailTransportAuthUser,

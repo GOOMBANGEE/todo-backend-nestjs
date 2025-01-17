@@ -32,6 +32,8 @@ import { UserModule } from './user/user.module';
         DATABASE_DATABASE_NAME: Joi.string().required(),
         SENTRY_DSN: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
+        JWT_ACCESS_TOKEN: Joi.string().required(),
+        JWT_REFRESH_TOKEN: Joi.string().required(),
         MAIL_TRANSPORT_HOST: Joi.string().required(),
         MAIL_TRANSPORT_AUTH_USER: Joi.string().required(),
         MAIL_TRANSPORT_AUTH_PASS: Joi.string().required(),
