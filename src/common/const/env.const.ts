@@ -11,9 +11,12 @@ const databaseDatabaseName = 'DATABASE_DATABASE_NAME';
 const sentryDsn = 'SENTRY_DSN';
 
 const saltOrRounds = 'SALT_OR_ROUNDS';
-const jwtSecret = 'JWT_SECRET';
 const accessToken = 'JWT_ACCESS_TOKEN';
+const accessTokenExpires = 'JWT_ACCESS_TOKEN_EXPIRES';
+const accessTokenSecret = 'JWT_ACCESS_TOKEN_SECRET';
 const refreshToken = 'JWT_REFRESH_TOKEN';
+const refreshTokenExpires = 'JWT_REFRESH_TOKEN_EXPIRES';
+const refreshTokenSecret = 'JWT_REFRESH_TOKEN_SECRET';
 
 const mailTransportHost = 'MAIL_TRANSPORT_HOST';
 const mailTransportAuthUser = 'MAIL_TRANSPORT_AUTH_USER';
@@ -35,9 +38,12 @@ export const envKey = {
   sentryDsn,
 
   saltOrRounds,
-  jwtSecret,
   accessToken,
+  accessTokenExpires,
+  accessTokenSecret,
   refreshToken,
+  refreshTokenExpires,
+  refreshTokenSecret,
 
   mailTransportHost,
   mailTransportAuthUser,

@@ -2,9 +2,8 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LocalGuard } from './guard/local.guard';
-import { Authorization } from './decorator/authorization.decorator';
-import { User } from '@prisma/client';
-import { JwtGuard } from './guard/jwt.guard';
+import { RefreshGuard } from './guard/refresh.guard';
+import { RequestUser } from './decorator/user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -19,15 +18,17 @@ export class AuthController {
 
   // /auth/login
   // @UseGuards(AuthGuard('local')) // auth/strategy/local.strategy.ts return user; => req.user = user
-  @UseGuards(LocalGuard) // auth/guard/local.guard.ts => LocalGuard extends AuthGuard('local')
   @Post('login')
-  create(@Authorization('user') user: User) {
-    return this.authService.login(user);
+  @UseGuards(LocalGuard) // auth/guard/local.guard.ts => LocalGuard extends AuthGuard('local')
+  create(@RequestUser() request) {
+    console.log(request);
+    return this.authService.login(request);
   }
 
-  @UseGuards(JwtGuard)
   @Post('refresh')
-  refresh(@Authorization() token: string) {
-    return this.authService.refreshToken(token);
+  @UseGuards(RefreshGuard)
+  refresh(@RequestUser() request) {
+    console.log(request);
+    return this.authService.refreshToken(request);
   }
 }

@@ -17,9 +17,12 @@ import { User } from '@prisma/client';
 @Injectable()
 export class AuthService {
   private readonly saltOrRounds: number;
-  private readonly jwtSecret: string;
   private readonly accessTokenType: string;
+  private readonly accessTokenExpires: string;
+  private readonly accessTokenSecret: string;
   private readonly refreshTokenType: string;
+  private readonly refreshTokenExpires: string;
+  private readonly refreshTokenSecret: string;
 
   constructor(
     private readonly jwtService: JwtService,
@@ -28,10 +31,15 @@ export class AuthService {
     private readonly userService: UserService,
     @Inject('winston') private readonly logger: Logger,
   ) {
-    this.jwtSecret = this.configService.get(envKey.jwtSecret);
     this.accessTokenType = this.configService.get(envKey.accessToken);
+    this.accessTokenExpires = this.configService.get(envKey.accessTokenExpires);
+    this.accessTokenSecret = this.configService.get(envKey.accessTokenSecret);
     this.refreshTokenType = this.configService.get(envKey.refreshToken);
-    this.saltOrRounds = this.configService.get(envKey.saltOrRounds);
+    this.refreshTokenExpires = this.configService.get(
+      envKey.refreshTokenExpires,
+    );
+    this.refreshTokenSecret = this.configService.get(envKey.refreshTokenSecret);
+    this.saltOrRounds = Number(this.configService.get(envKey.saltOrRounds));
   }
 
   async register(registerDto: RegisterDto) {
@@ -54,19 +62,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: { username, password: hashedPassword },
     });
-
-    const accessToken = await this.generateToken(
-      user.id,
-      username,
-      this.accessTokenType,
-    );
-    const refreshToken = await this.generateToken(
-      user.id,
-      username,
-      this.refreshTokenType,
-    );
-
-    return { accessToken, refreshToken };
+    return this.generateToken(user.id, user.username);
   }
 
   async validateUser(username: string, password: string) {
@@ -79,48 +75,37 @@ export class AuthService {
     return null;
   }
 
-  async generateToken(userId: number, username: string, type: string) {
-    const expiresIn = type === this.accessTokenType ? '5m' : '7d';
-
-    return await this.jwtService.signAsync(
-      { userId, username, type },
-      { secret: this.jwtSecret, expiresIn },
+  async generateToken(userId: number, username: string) {
+    const accessToken = await this.jwtService.signAsync(
+      { userId, username, type: this.accessTokenType },
+      { secret: this.accessTokenSecret, expiresIn: this.accessTokenExpires },
     );
-  }
-
-  async refreshToken(refreshToken: string) {
-    try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: this.jwtSecret,
-      });
-
-      if (payload.type !== this.refreshTokenType) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      const accessToken = await this.generateToken(
-        payload.userId,
-        payload.username,
-        this.accessTokenType,
-      );
-      return { accessToken };
-    } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-  }
-
-  async login(user: User) {
-    const accessToken = await this.generateToken(
-      user.id,
-      user.username,
-      this.accessTokenType,
-    );
-    const refreshToken = await this.generateToken(
-      user.id,
-      user.username,
-      this.refreshTokenType,
+    const refreshToken = await this.jwtService.signAsync(
+      { userId, username, type: this.refreshTokenType },
+      { secret: this.refreshTokenSecret, expiresIn: this.refreshTokenExpires },
     );
 
     return { accessToken, refreshToken };
+  }
+
+  async refreshToken(requestUser) {
+    if (requestUser.type !== this.refreshTokenType) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const accessToken = await this.jwtService.signAsync(
+      {
+        userId: requestUser.userId,
+        username: requestUser.username,
+        type: this.accessTokenType,
+      },
+      { secret: this.accessTokenSecret, expiresIn: this.accessTokenExpires },
+    );
+
+    return { accessToken };
+  }
+
+  async login(user: User) {
+    return this.generateToken(user.id, user.username);
   }
 }
