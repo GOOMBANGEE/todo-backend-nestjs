@@ -13,6 +13,7 @@ import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import { Logger } from 'winston';
 import { User } from '@prisma/client';
+import { v1 as uuidV1 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -44,25 +45,50 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     const username = registerDto.username;
-    const password = registerDto.password;
-    const passwordConfirm = registerDto.passwordConfirm;
 
-    if (password !== passwordConfirm) {
-      throw new BadRequestException('Passwords do not match');
+    if (username.includes('anonymous')) {
+      const password = uuidV1();
+      const hashedPassword = await bcrypt.hash(password, this.saltOrRounds);
+      const latestUser = await this.prisma.user.findFirst({
+        orderBy: {
+          id: 'desc',
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const userId = (latestUser?.id || 0) + 1;
+      const newUsername = `${username}${userId}`;
+
+      const user = await this.prisma.user.create({
+        data: {
+          username: newUsername,
+          password: hashedPassword,
+        },
+      });
+      return this.generateToken(userId, user.username);
+    } else {
+      const password = registerDto.password;
+      const confirmPassword = registerDto.confirmPassword;
+
+      if (password !== confirmPassword) {
+        throw new BadRequestException('Passwords do not match');
+      }
+      const existingUser = await this.prisma.user.findUnique({
+        where: { username },
+      });
+
+      if (existingUser) {
+        throw new BadRequestException('user already existing');
+      }
+      const hashedPassword = await bcrypt.hash(password, this.saltOrRounds);
+
+      const user = await this.prisma.user.create({
+        data: { username, password: hashedPassword },
+      });
+      return this.generateToken(user.id, user.username);
     }
-    const existingUser = await this.prisma.user.findUnique({
-      where: { username },
-    });
-
-    if (existingUser) {
-      throw new BadRequestException('user already existing');
-    }
-    const hashedPassword = await bcrypt.hash(password, this.saltOrRounds);
-
-    const user = await this.prisma.user.create({
-      data: { username, password: hashedPassword },
-    });
-    return this.generateToken(user.id, user.username);
   }
 
   async validateUser(username: string, password: string) {
@@ -77,11 +103,11 @@ export class AuthService {
 
   async generateToken(userId: number, username: string) {
     const accessToken = await this.jwtService.signAsync(
-      { userId, username, type: this.accessTokenType },
+      { id: userId, username, type: this.accessTokenType },
       { secret: this.accessTokenSecret, expiresIn: this.accessTokenExpires },
     );
     const refreshToken = await this.jwtService.signAsync(
-      { userId, username, type: this.refreshTokenType },
+      { id: userId, username, type: this.refreshTokenType },
       { secret: this.refreshTokenSecret, expiresIn: this.refreshTokenExpires },
     );
 
@@ -95,7 +121,7 @@ export class AuthService {
 
     const accessToken = await this.jwtService.signAsync(
       {
-        userId: requestUser.userId,
+        id: requestUser.id,
         username: requestUser.username,
         type: this.accessTokenType,
       },

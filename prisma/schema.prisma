@@ -12,6 +12,7 @@ model User {
   username  String   @unique
   password  String
   createdAt DateTime @default(now())
+  Todo      Todo[]
 }
 
 model Todo {
@@ -21,4 +22,6 @@ model Todo {
   isDone      Boolean  @default(false)
   startDate   DateTime
   endDate     DateTime
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
 }

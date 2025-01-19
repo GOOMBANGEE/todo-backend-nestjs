@@ -19,6 +19,6 @@ import { RefreshStrategy } from './strategy/refresh.strategy';
     AccessStrategy,
     RefreshStrategy,
   ],
-  exports: [LocalStrategy, AccessStrategy, RefreshStrategy, AuthService],
+  exports: [LocalStrategy, AccessStrategy, RefreshStrategy],
 })
 export class AuthModule {}
