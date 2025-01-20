@@ -14,15 +14,17 @@ import { RegisterDto } from './dto/register.dto';
 import { Logger } from 'winston';
 import { User } from '@prisma/client';
 import { v1 as uuidV1 } from 'uuid';
+import { Response } from 'express';
+import { CookieOptions } from 'express-serve-static-core';
 
 @Injectable()
 export class AuthService {
   private readonly saltOrRounds: number;
   private readonly accessTokenType: string;
-  private readonly accessTokenExpires: string;
+  private readonly accessTokenExpires: number;
   private readonly accessTokenSecret: string;
   private readonly refreshTokenType: string;
-  private readonly refreshTokenExpires: string;
+  private readonly refreshTokenExpires: number;
   private readonly refreshTokenSecret: string;
 
   constructor(
@@ -43,7 +45,7 @@ export class AuthService {
     this.saltOrRounds = Number(this.configService.get(envKey.saltOrRounds));
   }
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto, response: Response) {
     const username = registerDto.username;
 
     if (username.includes('anonymous')) {
@@ -58,7 +60,7 @@ export class AuthService {
         },
       });
 
-      const userId = (latestUser?.id || 0) + 1;
+      const userId = (latestUser?.id ?? 0) + 1;
       const newUsername = `${username}${userId}`;
 
       const user = await this.prisma.user.create({
@@ -67,7 +69,7 @@ export class AuthService {
           password: hashedPassword,
         },
       });
-      return this.generateToken(userId, user.username);
+      return this.generateToken(userId, user.username, response);
     } else {
       const password = registerDto.password;
       const confirmPassword = registerDto.confirmPassword;
@@ -87,7 +89,7 @@ export class AuthService {
       const user = await this.prisma.user.create({
         data: { username, password: hashedPassword },
       });
-      return this.generateToken(user.id, user.username);
+      return this.generateToken(user.id, user.username, response);
     }
   }
 
@@ -101,7 +103,7 @@ export class AuthService {
     return null;
   }
 
-  async generateToken(userId: number, username: string) {
+  async generateToken(userId: number, username: string, response: Response) {
     const accessToken = await this.jwtService.signAsync(
       { id: userId, username, type: this.accessTokenType },
       { secret: this.accessTokenSecret, expiresIn: this.accessTokenExpires },
@@ -111,9 +113,24 @@ export class AuthService {
       { secret: this.refreshTokenSecret, expiresIn: this.refreshTokenExpires },
     );
 
-    return { accessToken, refreshToken };
+    const cookieOptions: CookieOptions = {
+      httpOnly: true, // can't be accessed by JavaScript => reduces XSS risk
+      secure: process.env.NODE_ENV === 'production', // send only over HTTPS in production
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : undefined, // CSRF protection
+      expires: new Date(Date.now() + this.refreshTokenExpires),
+      maxAge: this.refreshTokenExpires, // set cookie expiration
+    };
+    response.cookie('refreshToken', refreshToken, cookieOptions);
+
+    return { accessToken };
   }
 
+  // /auth/login
+  async login(user: User, response: Response) {
+    return this.generateToken(user.id, user.username, response);
+  }
+
+  // /auth/refresh
   async refreshToken(requestUser) {
     if (requestUser.type !== this.refreshTokenType) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -131,7 +148,8 @@ export class AuthService {
     return { accessToken };
   }
 
-  async login(user: User) {
-    return this.generateToken(user.id, user.username);
+  // /auth/logout
+  async logout(response: Response) {
+    response.clearCookie('refreshToken');
   }
 }
