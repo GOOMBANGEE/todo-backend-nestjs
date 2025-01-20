@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,17 +10,39 @@ import { PrismaService } from 'src/common/prisma.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { SearchTodoDto } from './dto/search-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
+import { Logger } from 'winston';
+import { ConfigService } from '@nestjs/config';
+import { envKey } from '../common/const/env.const';
 
 @Injectable()
 export class TodoService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly anonymousLimit: number;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+    @Inject('winston') private readonly logger: Logger,
+  ) {
+    this.anonymousLimit = this.configService.get(envKey.anonymousLimit);
+  }
 
   // /todo
   async create(user: User, createTodoDto: CreateTodoDto): Promise<Todo> {
+    // 갯수제한 n개
+    if (user.username.includes('anonymous')) {
+      this.logger.debug('anonymous');
+      const todoCount = await this.prisma.todo.count({
+        where: { user: { username: user.username } },
+      });
+      this.logger.debug(todoCount);
+      if (todoCount > this.anonymousLimit) {
+        throw new BadRequestException('creation limit has been exceeded');
+      }
+    }
     const { startDate, endDate } = createTodoDto;
 
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new BadRequestException('startDate cannot be later than endDate.');
+      throw new BadRequestException('startDate cannot be later than endDate');
     }
 
     return this.prisma.todo.create({
@@ -154,7 +177,7 @@ export class TodoService {
       endDate &&
       new Date(startDate).getTime() > new Date(endDate).getTime()
     ) {
-      throw new BadRequestException('startDate cannot be later than endDate.');
+      throw new BadRequestException('startDate cannot be later than endDate');
     }
 
     return this.prisma.todo.update({
@@ -172,7 +195,7 @@ export class TodoService {
     } catch (err) {
       throw new NotFoundException({
         status: HttpStatus.NOT_FOUND,
-        message: `Todo with ID ${id} does not exist.`,
+        message: `Todo with ID ${id} does not exist`,
         details: err.meta,
       });
     }

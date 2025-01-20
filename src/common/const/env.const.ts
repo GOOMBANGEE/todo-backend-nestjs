@@ -18,6 +18,7 @@ const refreshToken = 'JWT_REFRESH_TOKEN';
 const refreshTokenExpires = 'JWT_REFRESH_TOKEN_EXPIRES';
 const refreshTokenSecret = 'JWT_REFRESH_TOKEN_SECRET';
 
+const anonymousLimit = 'ANONYMOUS_LIMIT';
 const mailTransportHost = 'MAIL_TRANSPORT_HOST';
 const mailTransportAuthUser = 'MAIL_TRANSPORT_AUTH_USER';
 const mailTransportAuthPass = 'MAIL_TRANSPORT_AUTH_PASS';
@@ -44,6 +45,8 @@ export const envKey = {
   refreshToken,
   refreshTokenExpires,
   refreshTokenSecret,
+
+  anonymousLimit,
 
   mailTransportHost,
   mailTransportAuthUser,

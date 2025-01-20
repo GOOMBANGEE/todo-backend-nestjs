@@ -37,6 +37,7 @@ import { UserModule } from './user/user.module';
         JWT_REFRESH_TOKEN: Joi.string().required(),
         JWT_REFRESH_TOKEN_EXPIRES: Joi.number().required(),
         JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
+        ANONYMOUS_LIMIT: Joi.number().required(),
         MAIL_TRANSPORT_HOST: Joi.string().required(),
         MAIL_TRANSPORT_AUTH_USER: Joi.string().required(),
         MAIL_TRANSPORT_AUTH_PASS: Joi.string().required(),

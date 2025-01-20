@@ -31,7 +31,6 @@ export class TodoController {
   // /todo
   @Post()
   create(@RequestUser() user: User, @Body() createTodoDto: CreateTodoDto) {
-    this.logger.debug(user);
     return this.todoService.create(user, createTodoDto);
   }
 
