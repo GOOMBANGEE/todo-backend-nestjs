@@ -104,25 +104,28 @@ export class AuthService {
   }
 
   async generateToken(userId: number, username: string, response: Response) {
+    const accessTokenExpires = this.accessTokenExpires;
+    // expiresIn => 1s단위 => 3600 => 1h
     const accessToken = await this.jwtService.signAsync(
       { id: userId, username, type: this.accessTokenType },
-      { secret: this.accessTokenSecret, expiresIn: this.accessTokenExpires },
+      { secret: this.accessTokenSecret, expiresIn: accessTokenExpires },
     );
+
     const refreshToken = await this.jwtService.signAsync(
       { id: userId, username, type: this.refreshTokenType },
       { secret: this.refreshTokenSecret, expiresIn: this.refreshTokenExpires },
     );
 
+    // maxAge => (Date.now() +) this.refreshTokenExpires (ms)
     const cookieOptions: CookieOptions = {
       httpOnly: true, // can't be accessed by JavaScript => reduces XSS risk
       secure: process.env.NODE_ENV === 'production', // send only over HTTPS in production
       sameSite: process.env.NODE_ENV === 'production' ? 'strict' : undefined, // CSRF protection
-      expires: new Date(Date.now() + this.refreshTokenExpires),
-      maxAge: this.refreshTokenExpires, // set cookie expiration
+      maxAge: this.refreshTokenExpires * 1000, // set cookie expiration
     };
     response.cookie('refreshToken', refreshToken, cookieOptions);
 
-    return { accessToken };
+    return { username, accessToken, accessTokenExpires };
   }
 
   // /auth/login
@@ -136,16 +139,18 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    const username = requestUser.username;
+    const accessTokenExpires = this.accessTokenExpires;
     const accessToken = await this.jwtService.signAsync(
       {
         id: requestUser.id,
         username: requestUser.username,
         type: this.accessTokenType,
       },
-      { secret: this.accessTokenSecret, expiresIn: this.accessTokenExpires },
+      { secret: this.accessTokenSecret, expiresIn: accessTokenExpires },
     );
 
-    return { accessToken };
+    return { username, accessToken, accessTokenExpires };
   }
 
   // /auth/logout
