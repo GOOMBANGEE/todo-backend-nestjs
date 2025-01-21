@@ -19,11 +19,7 @@ const refreshTokenExpires = 'JWT_REFRESH_TOKEN_EXPIRES';
 const refreshTokenSecret = 'JWT_REFRESH_TOKEN_SECRET';
 
 const anonymousLimit = 'ANONYMOUS_LIMIT';
-const mailTransportHost = 'MAIL_TRANSPORT_HOST';
-const mailTransportAuthUser = 'MAIL_TRANSPORT_AUTH_USER';
-const mailTransportAuthPass = 'MAIL_TRANSPORT_AUTH_PASS';
-const mailDefaultsFrom = 'MAIL_DEFAULTS_FROM';
-const mailTemplateDir = 'MAIL_TEMPLATE_DIR';
+const anonymousDateLimit = 'ANONYMOUS_DATE_LIMIT';
 
 export const envKey = {
   port,
@@ -47,10 +43,5 @@ export const envKey = {
   refreshTokenSecret,
 
   anonymousLimit,
-
-  mailTransportHost,
-  mailTransportAuthUser,
-  mailTransportAuthPass,
-  mailDefaultsFrom,
-  mailTemplateDir,
+  anonymousDateLimit,
 };

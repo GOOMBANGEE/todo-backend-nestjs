@@ -5,13 +5,12 @@ import * as Joi from 'joi';
 import { WinstonModule } from 'nest-winston';
 import * as process from 'node:process';
 import * as winston from 'winston';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { GlobalExceptionFilter } from './common/filter/global-exception.filter';
 import { TodoModule } from './todo/todo.module';
 import { UserModule } from './user/user.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -20,6 +19,7 @@ import { UserModule } from './user/user.module';
       envFilePath: `.env`,
       validationSchema: Joi.object({
         PORT: Joi.number().default(3000).required(),
+
         DATABASE_URL: Joi.string().required(),
         DATABASE_TYPE: Joi.string().valid('postgresql', 'mongodb').required(),
         DATABASE_USER: Joi.string().required(),
@@ -27,21 +27,21 @@ import { UserModule } from './user/user.module';
         DATABASE_HOST: Joi.string().required(),
         DATABASE_PORT: Joi.number().required(),
         DATABASE_DATABASE_NAME: Joi.string().required(),
+
         SENTRY_DSN: Joi.string().required(),
+
         JWT_ACCESS_TOKEN: Joi.string().required(),
         JWT_ACCESS_TOKEN_EXPIRES: Joi.number().required(),
         JWT_ACCESS_TOKEN_SECRET: Joi.string().required(),
         JWT_REFRESH_TOKEN: Joi.string().required(),
         JWT_REFRESH_TOKEN_EXPIRES: Joi.number().required(),
         JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
+
         ANONYMOUS_LIMIT: Joi.number().required(),
-        MAIL_TRANSPORT_HOST: Joi.string().required(),
-        MAIL_TRANSPORT_AUTH_USER: Joi.string().required(),
-        MAIL_TRANSPORT_AUTH_PASS: Joi.string().required(),
-        MAIL_DEFAULTS_FROM: Joi.string().required(),
-        MAIL_TEMPLATE_DIR: Joi.string().required(),
+        ANONYMOUS_DATE_LIMIT: Joi.number().required(),
       }),
     }),
+    ScheduleModule.forRoot(),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.Console({
@@ -71,9 +71,8 @@ import { UserModule } from './user/user.module';
     UserModule,
     TodoModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
