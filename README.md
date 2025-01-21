@@ -19,7 +19,6 @@ PostgreSQL
 | Hot Reload (Webpack)                    | npm install -D webpack-node-externals run-script-webpack-plugin webpack                                                                                    |
 | Configuration Management and Validation | npm i @nestjs/config joi                                                                                                                                   |
 | Authentication                          | npm i @nestjs/passport @nestjs/jwt passport passport-jwt passport-local bcrypt<br/> npm install -D @types/passport-local @types/passport-jwt @types/bcrypt |
-| Email                                   | npm i @nestjs-modules/mailer nodemailer                                                                                                                    |
 
 ## Project setup
 
