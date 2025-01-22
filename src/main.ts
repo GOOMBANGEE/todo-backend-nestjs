@@ -38,6 +38,16 @@ async function bootstrap() {
     .setDescription('Swagger API description page')
     .setVersion('1.0')
     .addTag('api')
+    .addCookieAuth('refreshToken')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Enter JWT token here',
+      },
+      'accessToken', // 이름을 지정해서 @ApiBearerAuth()에서 참조 가능
+    )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory); // localhost:3000/api

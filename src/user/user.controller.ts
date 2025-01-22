@@ -11,14 +11,17 @@ import { RequestUser } from '../auth/decorator/user.decorator';
 import { AccessGuard } from '../auth/guard/access.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Response } from 'express';
+import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 
 @Controller('user')
 @UseGuards(AccessGuard)
+@ApiBearerAuth('accessToken')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // /user
   @Patch()
+  @ApiBody({ type: UpdateUserDto })
   async update(@RequestUser() user, @Body() req: UpdateUserDto) {
     await this.userService.update(user, req);
   }
